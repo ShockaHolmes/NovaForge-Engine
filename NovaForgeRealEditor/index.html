@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NovaForge Engine - Real Editable 3D Editor</title>
+  <link rel="stylesheet" href="src/styles.css" />
+</head>
+<body>
+  <div id="appShell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">NF</div>
+        <div>
+          <h1>NovaForge Engine</h1>
+          <p>Real editable browser game engine prototype</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button id="newSceneBtn" class="ghost">New Scene</button>
+        <button id="saveSceneBtn" class="primary">Save .novaforge</button>
+        <label class="file-btn ghost">
+          Load Scene
+          <input id="loadSceneInput" type="file" accept=".json,.novaforge" />
+        </label>
+        <button id="exportBuildBtn" class="accent">Export Build</button>
+      </div>
+    </header>
+
+    <aside class="leftPanel panel">
+      <section>
+        <h2>Scene Tools</h2>
+        <div class="grid-buttons two">
+          <button id="selectToolBtn" class="active">Select</button>
+          <button id="moveToolBtn">Move</button>
+          <button id="rotateToolBtn">Rotate</button>
+          <button id="scaleToolBtn">Scale</button>
+        </div>
+        <div class="grid-buttons two small-gap">
+          <button id="snapToggleBtn">Snap Off</button>
+          <button id="focusBtn">Focus</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Add Object</h2>
+        <div class="grid-buttons two">
+          <button data-add="cube">Cube</button>
+          <button data-add="sphere">Sphere</button>
+          <button data-add="plane">Plane</button>
+          <button data-add="terrain">Terrain</button>
+          <button data-add="platform">Platform</button>
+          <button data-add="player">Player</button>
+          <button data-add="light">Light</button>
+          <button data-add="camera">Camera</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Playable Mode</h2>
+        <div class="grid-buttons two">
+          <button id="addPlayerBtn" class="success">Add Player</button>
+          <button id="addPlatformBtn">Add Platform</button>
+          <button id="cameraFreeBtn">Free Camera</button>
+          <button id="cameraFollowPlayerBtn" class="active">Follow Player</button>
+          <button id="cameraFollowSelectedBtn">Follow Selected</button>
+          <button id="cameraFirstPersonBtn">First Person</button>
+        </div>
+        <div class="triple two-cols small-gap">
+          <label>Follow Distance <input id="cameraFollowDistance" type="number" min="1" step="0.5" value="7" /></label>
+          <label>Follow Height <input id="cameraFollowHeight" type="number" min="0.5" step="0.5" value="4" /></label>
+        </div>
+      </section>
+
+      <section>
+        <h2>Import Assets</h2>
+        <label class="file-btn full">
+          Import FBX / GLB / GLTF / OBJ
+          <input id="modelInput" type="file" accept=".fbx,.glb,.gltf,.obj" multiple />
+        </label>
+        <label class="file-btn full">
+          Import Animation FBX / GLB / GLTF
+          <input id="animationInput" type="file" accept=".fbx,.glb,.gltf" multiple />
+        </label>
+        <div id="assetList" class="scroll-list empty">No imported assets yet.</div>
+      </section>
+
+      <section>
+        <h2>AI Builder</h2>
+        <textarea id="aiPrompt" rows="4" placeholder="Example: create a forest training scene with terrain, lights, and 3 cubes"></textarea>
+        <button id="aiBuildBtn" class="accent full">Generate Scene Idea</button>
+        <div id="aiOutput" class="assistant-output">Nova AI is ready to help build, explain, and debug.</div>
+      </section>
+    </aside>
+
+    <main class="viewportWrap">
+      <div class="viewportToolbar">
+        <div class="modeGroup">
+          <button data-camera="perspective" class="active">Perspective</button>
+          <button data-camera="top">Top</button>
+          <button data-camera="front">Front</button>
+          <button data-camera="right">Right</button>
+        </div>
+        <div class="modeGroup">
+          <button id="playBtn" class="success">Play</button>
+          <button id="stopBtn">Stop</button>
+          <button id="gridToggleBtn" class="active">Grid</button>
+          <button id="wireToggleBtn">Wire Off</button>
+        </div>
+      </div>
+      <div id="viewport"></div>
+      <div id="loadingOverlay" class="hidden">
+        <div class="loader"></div>
+        <p id="loadingText">Loading asset...</p>
+      </div>
+      <div id="helpOverlay">
+        <strong>Controls:</strong> Edit: left-click selects · W/E/R tools · gizmo moves/rotates/scales. Play: WASD or arrows move character · Space/J jumps · camera follows player or selected target.
+      </div>
+      <div id="gameHud" class="game-hud hidden">
+        <strong>PLAY MODE</strong>
+        <span>WASD / Arrows: Move</span>
+        <span>Space/J: Jump</span>
+        <span id="scoreText">Score: 0</span>
+      </div>
+    </main>
+
+    <aside class="rightPanel panel">
+      <section>
+        <h2>Hierarchy</h2>
+        <div id="hierarchy" class="scroll-list empty">No objects yet.</div>
+      </section>
+
+      <section>
+        <h2>Inspector</h2>
+        <div id="inspectorEmpty" class="empty-state">Select an object to edit position, rotation, scale, material, and animation.</div>
+        <div id="inspector" class="inspector hidden">
+          <label>Name <input id="objName" type="text" /></label>
+          <label>Type <input id="objType" type="text" disabled /></label>
+          <div class="row-actions">
+            <button id="duplicateBtn">Duplicate</button>
+            <button id="deleteBtn" class="danger">Delete</button>
+          </div>
+          <h3>Transform</h3>
+          <div class="triple">
+            <label>X <input id="posX" type="number" step="0.1" /></label>
+            <label>Y <input id="posY" type="number" step="0.1" /></label>
+            <label>Z <input id="posZ" type="number" step="0.1" /></label>
+          </div>
+          <div class="triple">
+            <label>Rot X <input id="rotX" type="number" step="1" /></label>
+            <label>Rot Y <input id="rotY" type="number" step="1" /></label>
+            <label>Rot Z <input id="rotZ" type="number" step="1" /></label>
+          </div>
+          <div class="triple">
+            <label>Scale X <input id="scaleX" type="number" step="0.1" /></label>
+            <label>Scale Y <input id="scaleY" type="number" step="0.1" /></label>
+            <label>Scale Z <input id="scaleZ" type="number" step="0.1" /></label>
+          </div>
+          <h3>Material</h3>
+          <div class="material-row">
+            <label>Color <input id="matColor" type="color" /></label>
+            <label>Opacity <input id="opacity" type="range" min="0.1" max="1" step="0.05" /></label>
+          </div>
+          <label class="inline"><input id="visibleToggle" type="checkbox" /> Visible</label>
+          <label class="inline"><input id="castShadowToggle" type="checkbox" /> Cast Shadow</label>
+
+          <h3>Physics & Character Controller</h3>
+          <label class="inline"><input id="physicsEnabled" type="checkbox" /> Physics Enabled</label>
+          <label>Body Type
+            <select id="physicsBodyType">
+              <option value="none">None</option>
+              <option value="static">Static Collider</option>
+              <option value="dynamic">Dynamic Rigidbody</option>
+              <option value="character">Character Controller</option>
+            </select>
+          </label>
+          <label class="inline"><input id="physicsGravity" type="checkbox" /> Use Gravity</label>
+          <div class="triple two-cols">
+            <label>Move Speed <input id="physicsSpeed" type="number" min="0" step="0.5" value="6" /></label>
+            <label>Jump Power <input id="physicsJump" type="number" min="0" step="0.5" value="8" /></label>
+          </div>
+          <label class="inline"><input id="cameraTargetToggle" type="checkbox" /> Camera Follow Target</label>
+
+          <h3>Script Components</h3>
+          <label>Script Preset
+            <select id="scriptPreset">
+              <option value="rotator">Rotator</option>
+              <option value="bob">Hover Bob</option>
+              <option value="patrol">Side Patrol</option>
+              <option value="collectable">Collectable</option>
+              <option value="playerInput">Player Input</option>
+            </select>
+          </label>
+          <button id="addScriptBtn" class="accent full">Add Script</button>
+          <div id="scriptList" class="scroll-list compact empty">No scripts attached.</div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Animation Studio</h2>
+        <div id="animationPanel" class="animation-panel">
+          <label>Animation Name <input id="animationName" type="text" value="NewAnimation" /></label>
+          <div class="triple two-cols">
+            <label>Time <input id="keyTime" type="number" min="0" step="0.1" value="0" /></label>
+            <label>Duration <input id="animDuration" type="number" min="0.1" step="0.1" value="2" /></label>
+          </div>
+          <div class="row-actions">
+            <button id="captureKeyframeBtn" class="accent">Capture Keyframe</button>
+            <button id="clearKeyframesBtn">Clear</button>
+          </div>
+          <div class="row-actions">
+            <button id="playCreatedAnimBtn" class="success">Play Created</button>
+            <button id="stopAnimBtn">Stop</button>
+          </div>
+          <div id="keyframeList" class="scroll-list compact empty">No keyframes captured.</div>
+          <h3>Imported Clips</h3>
+          <div id="clipList" class="scroll-list compact empty">Select an imported animated model.</div>
+        </div>
+      </section>
+    </aside>
+
+    <footer class="statusbar">
+      <span id="statusText">Ready.</span>
+      <span id="objectCount">0 objects</span>
+      <span>NovaForge v0.5 Character Controller</span>
+    </footer>
+  </div>
+
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

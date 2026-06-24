@@ -1,0 +1,19 @@
+{
+  "name": "novaforge-real-editor",
+  "version": "0.5.0",
+  "description": "NovaForge Engine browser game engine prototype with real Three.js editing, button rescue loader, playable mode, physics, character controllers, collision, script components, and camera follow modes.",
+  "type": "module",
+  "scripts": {
+    "start": "python server.py",
+    "check": "node --check src/main.js"
+  },
+  "keywords": [
+    "game-engine",
+    "threejs",
+    "fbx",
+    "gltf",
+    "animation",
+    "editor"
+  ],
+  "license": "MIT"
+}
